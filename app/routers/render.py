@@ -169,6 +169,21 @@ async def list_renders_by_tree():
         await db.close()
 
 
+@router.get("/code/{filename}")
+async def get_render_code(filename: str):
+    """Return the R code used to generate a specific render."""
+    db = await get_db()
+    try:
+        row = await db.execute_fetchall(
+            "SELECT r_code FROM render_history WHERE render_path = ?", (filename,)
+        )
+        if not row or not row[0][0]:
+            return {"r_code": None}
+        return {"r_code": row[0][0], "filename": filename}
+    finally:
+        await db.close()
+
+
 @router.delete("/renders/{filename}")
 async def delete_render(filename: str):
     file_path = settings.RENDER_DIR / filename

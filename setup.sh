@@ -1,6 +1,6 @@
 #!/bin/bash
 # PhyloChat Setup Script
-# Creates conda environment with Python + R + ggtree
+# Prerequisite: Claude Code CLI must be installed and logged in.
 
 set -e
 
@@ -9,43 +9,93 @@ echo "  PhyloChat Setup"
 echo "==================================="
 echo ""
 
-# Check conda
-if ! command -v conda &> /dev/null; then
-    echo "❌ conda not found. Install Miniconda first:"
-    echo "   https://docs.conda.io/en/latest/miniconda.html"
+# ── 1. Check Claude Code CLI ─────────────────────────
+if ! command -v claude &> /dev/null; then
+    echo "[ERROR] Claude Code CLI not found."
+    echo ""
+    echo "  Install:"
+    echo "    npm install -g @anthropic-ai/claude-code"
+    echo ""
+    echo "  Then log in:"
+    echo "    claude login"
+    echo ""
+    echo "  After login, re-run this script."
     exit 1
 fi
+echo "[OK] Claude Code CLI found: $(which claude)"
 
-# Create conda environment
+# ── 2. Check conda ───────────────────────────────────
+if ! command -v conda &> /dev/null; then
+    echo "[ERROR] conda not found."
+    echo ""
+    echo "  Install Miniconda:"
+    echo "    https://docs.anaconda.com/miniconda/install/"
+    echo ""
+    echo "  After installation, re-run this script."
+    exit 1
+fi
+echo "[OK] conda found: $(which conda)"
+
+# ── 3. Create conda environment ──────────────────────
 ENV_NAME="phylochat"
 
 if conda env list | grep -q "^${ENV_NAME} "; then
-    echo "⚠️  Environment '${ENV_NAME}' already exists."
-    read -p "Recreate it? (y/N): " answer
+    echo "[OK] Environment '${ENV_NAME}' already exists."
+    read -p "     Recreate it? (y/N): " answer
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         conda env remove -n ${ENV_NAME} -y
     else
-        echo "Updating existing environment..."
+        echo "     Updating existing environment..."
         conda env update -n ${ENV_NAME} -f environment.yml --prune
+        echo "[OK] Environment updated."
         echo ""
-        echo "✅ Environment updated. Run: ./start.sh"
-        exit 0
     fi
 fi
 
-echo "📦 Creating conda environment '${ENV_NAME}'..."
-echo "   (This may take a few minutes for R + Bioconductor packages)"
-echo ""
+if ! conda env list | grep -q "^${ENV_NAME} "; then
+    echo "[..] Creating conda environment '${ENV_NAME}'..."
+    echo "     (This may take a few minutes for R + Bioconductor packages)"
+    echo ""
+    conda env create -f environment.yml
+    echo "[OK] Environment created."
+fi
 
-conda env create -f environment.yml
+# ── 4. Verify R packages ────────────────────────────
+echo "[..] Verifying R packages..."
+CONDA_BASE=$(conda info --base)
+RSCRIPT="${CONDA_BASE}/envs/${ENV_NAME}/bin/Rscript"
 
+if [ ! -f "$RSCRIPT" ]; then
+    echo "[ERROR] Rscript not found in conda env."
+    echo "        Try removing and re-creating the environment."
+    exit 1
+fi
+
+$RSCRIPT -e '
+pkgs <- c("ggtree", "ggplot2", "treeio")
+missing <- pkgs[!sapply(pkgs, requireNamespace, quietly = TRUE)]
+if (length(missing) > 0) {
+    cat("[ERROR] Missing R packages:", paste(missing, collapse = ", "), "\n")
+    quit(status = 1)
+} else {
+    cat("[OK] R packages verified: ggtree, ggplot2, treeio\n")
+}
+'
+
+# ── 5. Create data directories ──────────────────────
+mkdir -p data/{uploads,renders,exports}
+echo "[OK] Data directories ready."
+
+# ── 6. Done ─────────────────────────────────────────
 echo ""
-echo "✅ Setup complete!"
+echo "==================================="
+echo "  Setup complete!"
+echo "==================================="
 echo ""
-echo "To start PhyloChat:"
-echo "  ./start.sh"
+echo "  To start PhyloChat:"
 echo ""
-echo "Or manually:"
-echo "  conda activate ${ENV_NAME}"
-echo "  python run.py"
+echo "    conda activate ${ENV_NAME}"
+echo "    python run.py"
+echo ""
+echo "  Server: http://localhost:8008"
 echo ""
