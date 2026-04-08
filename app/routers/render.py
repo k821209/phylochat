@@ -1,4 +1,5 @@
 import os
+import re
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
@@ -7,6 +8,12 @@ from app.config import settings
 from app.database import get_db
 from app.models.schemas import RenderRequest, RenderResponse
 from app.services.r_executor import render_ggtree
+
+
+def _extract_tree_id_from_filename(filename: str) -> int | None:
+    """Extract tree_id from render filename like 'tree_15_xxx.png'."""
+    m = re.match(r"tree_(\d+)_", filename)
+    return int(m.group(1)) if m else None
 
 router = APIRouter(prefix="/render", tags=["render"])
 
@@ -26,7 +33,7 @@ async def render_ggtree_endpoint(req: RenderRequest):
 
         await db.execute(
             "INSERT INTO render_history (tree_id, r_code, render_path) VALUES (?, ?, ?)",
-            (req.tree_id, req.r_code, str(output_path)),
+            (req.tree_id, req.r_code, output_path.name),
         )
         await db.commit()
 
@@ -86,22 +93,49 @@ async def list_renders():
 
 
 @router.post("/associate")
-async def associate_render(filename: str, tree_id: int):
-    """Associate a render file with a tree (called by frontend when new render detected)."""
+async def associate_render(filename: str, tree_id: int | None = None):
+    """Associate a render file with a tree. Auto-detects tree_id from filename if not provided."""
     file_path = settings.RENDER_DIR / filename
     if not file_path.exists():
         raise ValueError(f"Render {filename} not found")
 
+    # Auto-detect tree_id from filename (e.g. tree_15_xxx.png → 15)
+    if tree_id is None:
+        tree_id = _extract_tree_id_from_filename(filename)
+    if tree_id is None:
+        return {"associated": False, "reason": "Cannot determine tree_id"}
+
     db = await get_db()
     try:
+        # Verify tree exists
+        tree_row = await db.execute_fetchall(
+            "SELECT id FROM tree_files WHERE id = ?", (tree_id,)
+        )
+        if not tree_row:
+            return {"associated": False, "reason": f"Tree {tree_id} not found"}
+
+        # Try to read R code from companion .R file
+        r_code = ""
+        r_file = file_path.with_suffix(".R")
+        if r_file.exists():
+            r_code = r_file.read_text(encoding="utf-8")
+
         # Check if already associated
         existing = await db.execute_fetchall(
-            "SELECT id FROM render_history WHERE render_path = ?", (filename,)
+            "SELECT id, r_code FROM render_history WHERE render_path = ?", (filename,)
         )
-        if not existing:
+        if existing:
+            # Update r_code if it was empty and we now have it
+            if r_code and not existing[0][1]:
+                await db.execute(
+                    "UPDATE render_history SET r_code = ? WHERE id = ?",
+                    (r_code, existing[0][0]),
+                )
+                await db.commit()
+        else:
             await db.execute(
-                "INSERT INTO render_history (tree_id, r_code, render_path) VALUES (?, '', ?)",
-                (tree_id, filename),
+                "INSERT INTO render_history (tree_id, r_code, render_path) VALUES (?, ?, ?)",
+                (tree_id, r_code, filename),
             )
             await db.commit()
         return {"associated": filename, "tree_id": tree_id}

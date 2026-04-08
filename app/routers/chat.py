@@ -48,11 +48,21 @@ async def send_message(req: ChatRequest):
                 output_path = render_ggtree(newick, r_code, "png")
                 render_url = f"/renders/{output_path.name}"
 
-                # Save render history
-                await db.execute(
-                    "INSERT INTO render_history (tree_id, r_code, render_path) VALUES (?, ?, ?)",
-                    (req.tree_id, r_code, str(output_path)),
+                # Save render history — upsert in case polling already created the row
+                existing = await db.execute_fetchall(
+                    "SELECT id FROM render_history WHERE render_path = ?",
+                    (output_path.name,),
                 )
+                if existing:
+                    await db.execute(
+                        "UPDATE render_history SET r_code = ? WHERE render_path = ?",
+                        (r_code, output_path.name),
+                    )
+                else:
+                    await db.execute(
+                        "INSERT INTO render_history (tree_id, r_code, render_path) VALUES (?, ?, ?)",
+                        (req.tree_id, r_code, output_path.name),
+                    )
                 await db.commit()
             except RuntimeError as e:
                 result["explanation"] += f"\n\n⚠️ R execution error: {e}"

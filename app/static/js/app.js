@@ -94,19 +94,16 @@ function startRenderPolling() {
             const data = await resp.json();
 
             if (data.file && data.mtime > lastRenderMtime) {
-                const prevMtime = lastRenderMtime;
                 lastRenderMtime = data.mtime;
 
-                // Associate with active tree
+                // Associate — uses active tree or auto-detects from filename
                 const activeTreeId = TreeViewer.getTreeId();
-                if (activeTreeId) {
-                    fetch(`/render/associate?filename=${encodeURIComponent(data.file)}&tree_id=${activeTreeId}`, { method: 'POST' });
-                }
+                const params = new URLSearchParams({ filename: data.file });
+                if (activeTreeId) params.set('tree_id', activeTreeId);
+                fetch(`/render/associate?${params}`, { method: 'POST' });
 
-                // Auto-show only if a tree is active
-                if (activeTreeId) {
-                    showGgtreeRender(data.url);
-                }
+                // Always show the latest render
+                showGgtreeRender(data.url);
 
                 updateRenderCount(null);
                 refreshExplorer();
@@ -123,7 +120,48 @@ function showGgtreeRender(url) {
     img.src = url + '?t=' + Date.now();
     img.style.display = 'block';
     if (placeholder) placeholder.style.display = 'none';
+    const actions = document.getElementById('render-actions');
+    if (actions) actions.style.display = 'flex';
     toggleView('render');
+}
+
+function _getCurrentRenderFilename() {
+    const img = document.getElementById('ggtree-image');
+    if (!img || !img.src) return null;
+    const url = new URL(img.src);
+    return url.pathname.split('/').pop();
+}
+
+function downloadCurrentPng() {
+    const filename = _getCurrentRenderFilename();
+    if (!filename) { showToast('No render displayed', 'error'); return; }
+    const link = document.createElement('a');
+    link.href = `/renders/${filename}`;
+    link.download = filename;
+    link.click();
+    showToast('Downloading PNG...', 'info');
+}
+
+async function downloadCurrentCode() {
+    const filename = _getCurrentRenderFilename();
+    if (!filename) { showToast('No render displayed', 'error'); return; }
+    try {
+        const resp = await fetch(`/render/code/${encodeURIComponent(filename)}`);
+        const data = await resp.json();
+        if (!data.r_code) {
+            showToast('No R code available for this render', 'error');
+            return;
+        }
+        const blob = new Blob([data.r_code], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename.replace(/\.(png|svg)$/, '.R');
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast('Downloading R code...', 'info');
+    } catch (e) {
+        showToast('Failed to export R code', 'error');
+    }
 }
 
 function updateRenderCount(count) {
@@ -372,6 +410,35 @@ async function exportFigure(format) {
     // Generate via R for the requested format
     showToast(`Generating ${format.toUpperCase()}...`, 'info');
     window.open(`/export/figure?tree_id=${treeId}&format=${format}`, '_blank');
+}
+
+async function exportCode() {
+    const treeId = TreeViewer.getTreeId();
+    if (!treeId) {
+        showToast('No tree loaded', 'error');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`/export/code/${treeId}`);
+        if (!resp.ok) throw new Error('Failed to fetch R code');
+        const data = await resp.json();
+
+        if (!data.r_code) {
+            showToast('No R code available. Use chat to generate a render first.', 'error');
+            return;
+        }
+
+        const blob = new Blob([data.r_code], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `phylochat_tree_${treeId}.R`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast('Downloading R code...', 'info');
+    } catch (e) {
+        showToast('Failed to export R code', 'error');
+    }
 }
 
 /* ==========================================================

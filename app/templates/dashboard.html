@@ -18,13 +18,20 @@
                     <p class="welcome-tagline">Upload a tree and ask Claude to generate a figure</p>
                 </div>
             </div>
+            <div id="render-actions" class="render-actions" style="display:none;">
+                <button class="btn btn-ghost btn-sm" onclick="downloadCurrentPng()" title="Download PNG">PNG</button>
+                <button class="btn btn-ghost btn-sm" onclick="downloadCurrentCode()" title="Download R Code">R Code</button>
+            </div>
             <img id="ggtree-image" src="" alt="ggtree render" style="display:none;">
         </div>
 
         <!-- File Explorer: slide-out drawer within tree panel -->
         <div class="explorer-backdrop" id="explorer-backdrop" onclick="toggleExplorer(false)"></div>
         <div class="panel-explorer" id="panel-explorer">
-            <button class="explorer-close-btn" onclick="toggleExplorer(false)" title="Close file explorer">&times;</button>
+            <div class="explorer-top-btns">
+                <button class="btn-refresh" onclick="refreshExplorer()" title="Refresh">&#x21bb;</button>
+                <button class="explorer-close-btn" onclick="toggleExplorer(false)" title="Close">&times;</button>
+            </div>
             <div class="explorer-header">
                 <span>Files</span>
             </div>

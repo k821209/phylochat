@@ -498,6 +498,18 @@ main {
     background-color: #fff;
     border-radius: var(--radius);
 }
+.render-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    padding: 6px 12px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+}
+.btn-sm {
+    font-size: 0.78em;
+    padding: 4px 10px;
+}
 .render-empty-state {
     flex: 1;
     display: flex;
@@ -533,10 +545,13 @@ main {
     box-shadow: var(--shadow-lg);
 }
 
+.explorer-top-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: 4px 6px 0;
+}
 .explorer-close-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
     background: none;
     border: none;
     color: var(--text-dim);
@@ -545,7 +560,6 @@ main {
     padding: 4px;
     border-radius: 4px;
     transition: color var(--transition), background var(--transition);
-    z-index: 1;
 }
 .explorer-close-btn:hover {
     color: var(--text);
@@ -662,6 +676,20 @@ main {
     font-weight: 500;
     color: var(--text-dim);
     font-size: 0.9em;
+}
+.btn-refresh {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+}
+.btn-refresh:hover {
+    background: var(--border);
+    color: var(--text-primary);
 }
 
 /* Explorer backdrop for mobile */
