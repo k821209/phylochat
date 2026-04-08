@@ -1,0 +1,28 @@
+<div class="toolbar">
+    <div class="toolbar-left">
+        <button class="btn btn-icon btn-explorer-toggle" onclick="toggleExplorer()" title="File explorer" id="btn-explorer">
+            &#9776;
+        </button>
+        <label class="btn btn-primary" for="file-upload">
+            <span>Upload Tree</span>
+            <input type="file" id="file-upload" accept=".nwk,.newick,.tree,.treefile,.nex,.nexus,.phy,.phylip,.xml" hidden>
+        </label>
+        <span class="divider">or</span>
+        <button class="btn" id="btn-paste" onclick="showPasteModal()">Paste Newick</button>
+    </div>
+    <div class="toolbar-right" id="toolbar-export" style="display:none;">
+        <button class="btn btn-ghost" id="btn-export-png" onclick="exportFigure('png')"><span class="btn-label">Export </span>PNG</button>
+    </div>
+</div>
+
+<!-- Paste Modal -->
+<div id="paste-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Paste Newick String</h3>
+        <textarea id="newick-input" rows="6" placeholder="((A:0.1,B:0.2):0.3,(C:0.4,D:0.5):0.6);"></textarea>
+        <div class="modal-actions">
+            <button class="btn" onclick="hidePasteModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitPastedNewick()">Load Tree</button>
+        </div>
+    </div>
+</div>

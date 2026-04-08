@@ -1,0 +1,1137 @@
+/* ============================================================
+   PhyloChat - Redesigned CSS
+   UX improvements:
+   - File explorer moved to collapsible drawer (not center column)
+   - Resizable panel divider
+   - Improved contrast and visual hierarchy
+   - Responsive breakpoints
+   - Loading states and transitions
+   - Render view dark-mode-friendly background
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #1a1a2e;
+    --bg-panel: #16213e;
+    --bg-input: #0f3460;
+    --bg-surface: #1e2740;
+    --text: #e8eaed;
+    --text-secondary: #a8b2c1;
+    --text-dim: #6b7a90;
+    --accent: #4cc9f0;
+    --accent-hover: #3bb5dc;
+    --accent-subtle: rgba(76, 201, 240, 0.12);
+    --border: #2a3550;
+    --border-light: #334466;
+    --success: #4ade80;
+    --success-bg: #1a4a2a;
+    --warn: #fbbf24;
+    --warn-bg: #4a3a1a;
+    --danger: #ff7b72;
+    --danger-hover: #ff5c52;
+    --render-bg: #2a2a3a;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --radius: 6px;
+    --radius-lg: 10px;
+    --transition: 0.18s ease;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 44px;
+    min-height: 44px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+header h1 {
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.tagline {
+    color: var(--text-dim);
+    font-size: 0.8em;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+.badge {
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.01em;
+}
+.badge-ok { background: var(--success-bg); color: var(--success); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+
+main {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.dashboard {
+    display: flex;
+    height: 100%;
+    position: relative;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Left panel: tree viewer (takes remaining space) */
+.panel-tree {
+    flex: 1;
+    min-width: 320px;
+    position: relative;
+}
+
+/* Right panel: terminal */
+.panel-right {
+    flex: 0 0 38%;
+    min-width: 320px;
+    max-width: 55%;
+    border-left: 1px solid var(--border);
+}
+
+/* ============================================================
+   RESIZABLE DIVIDER
+   ============================================================ */
+
+.panel-divider {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: var(--border);
+    position: relative;
+    z-index: 5;
+    transition: background var(--transition);
+}
+.panel-divider:hover,
+.panel-divider.dragging {
+    background: var(--accent);
+}
+.panel-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 32px;
+    border-radius: 2px;
+    background: var(--text-dim);
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+.panel-divider:hover::after,
+.panel-divider.dragging::after {
+    opacity: 0.6;
+}
+
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    min-height: 42px;
+}
+.toolbar-left,
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.toolbar-right {
+    gap: 4px;
+}
+.divider {
+    color: var(--text-dim);
+    font-size: 0.8em;
+    padding: 0 2px;
+}
+
+/* Explorer toggle in toolbar */
+.btn-explorer-toggle {
+    position: relative;
+}
+.btn-explorer-toggle .explorer-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #111;
+    font-size: 0.65em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.82em;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+    line-height: 1.3;
+}
+.btn:hover:not(:disabled) {
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+}
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #111;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #111;
+}
+
+.btn-sm {
+    padding: 3px 8px;
+    font-size: 0.75em;
+    border-radius: 4px;
+}
+
+.btn-icon {
+    padding: 5px 7px;
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+/* Ghost button variant for less visual weight */
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-secondary);
+}
+.btn-ghost:hover:not(:disabled) {
+    background: var(--accent-subtle);
+    color: var(--accent);
+    border-color: transparent;
+}
+
+/* ============================================================
+   VIEW TABS (Preview / Render)
+   ============================================================ */
+
+.view-tabs {
+    display: flex;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+}
+.view-tab {
+    padding: 8px 18px;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color var(--transition), border-color var(--transition);
+    letter-spacing: 0.01em;
+}
+.view-tab:hover {
+    color: var(--text-secondary);
+}
+.view-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.view-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+/* Render count indicator on tab */
+.view-tab .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--accent-subtle);
+    color: var(--accent);
+    font-size: 0.85em;
+    margin-left: 6px;
+}
+
+/* ============================================================
+   TREE VIEWER
+   ============================================================ */
+
+.tree-viewer {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    background: var(--bg);
+}
+#tree-svg {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+.placeholder {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    padding: 24px;
+}
+
+/* ============================================================
+   WELCOME SCREEN
+   ============================================================ */
+
+.welcome {
+    max-width: 480px;
+    text-align: center;
+}
+.welcome-icon {
+    font-size: 2.8em;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.welcome h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+}
+.welcome-tagline {
+    color: var(--accent);
+    font-size: 0.95em;
+    margin-bottom: 28px;
+    font-weight: 500;
+}
+
+.welcome-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+    margin-bottom: 28px;
+}
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    transition: border-color var(--transition);
+}
+.step:hover {
+    border-color: var(--border-light);
+}
+.step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #111;
+    font-weight: 700;
+    font-size: 0.82em;
+}
+.step strong {
+    color: var(--text);
+    font-size: 0.9em;
+    display: block;
+}
+.step p {
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.examples-title {
+    font-size: 0.82em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+.example-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+.chip {
+    padding: 6px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.78em;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+    user-select: none;
+}
+.chip:hover {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ============================================================
+   GGTREE RENDER VIEW
+   ============================================================ */
+
+.ggtree-render {
+    flex: 1;
+    overflow: auto;
+    background: var(--render-bg);
+    display: flex;
+    flex-direction: column;
+}
+.render-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.82em;
+}
+#ggtree-image {
+    max-width: 100%;
+    display: block;
+    margin: auto;
+    padding: 12px;
+    /* Checkerboard pattern so users can see transparent areas */
+    background-image:
+        linear-gradient(45deg, #333 25%, transparent 25%),
+        linear-gradient(-45deg, #333 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #333 75%),
+        linear-gradient(-45deg, transparent 75%, #333 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color: #fff;
+    border-radius: var(--radius);
+}
+.render-empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 0.85em;
+    text-align: center;
+    padding: 24px;
+}
+
+/* ============================================================
+   FILE EXPLORER (collapsible drawer overlay)
+   ============================================================ */
+
+.panel-explorer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: none;
+}
+.panel-explorer.open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+}
+
+.explorer-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color var(--transition), background var(--transition);
+    z-index: 1;
+}
+.explorer-close-btn:hover {
+    color: var(--text);
+    background: var(--bg-input);
+}
+
+/* Explorer content (hierarchical tree → renders view) */
+.explorer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 8px;
+}
+.tree-group {
+    margin-bottom: 8px;
+}
+.tree-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text);
+    transition: background var(--transition);
+    gap: 6px;
+    border-left: 2px solid transparent;
+}
+.tree-group-header:hover { background: var(--bg-input); }
+.tree-group-header.active {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+.tree-group-header .tree-group-icon { margin-right: 4px; font-size: 0.9em; }
+.tree-group-header .tree-group-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tree-group-header .tree-group-badge {
+    font-size: 0.7em;
+    color: var(--text-dim);
+    background: var(--bg-input);
+    padding: 1px 6px;
+    border-radius: 8px;
+}
+.tree-group-renders {
+    padding-left: 18px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.render-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75em;
+    color: var(--text-secondary);
+    transition: background var(--transition);
+    gap: 6px;
+    border-left: 1px solid var(--border);
+}
+.render-row:hover { background: var(--bg-input); color: var(--text); }
+.render-row-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.render-row-time { font-size: 0.9em; color: var(--text-dim); white-space: nowrap; }
+.render-row .delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0 2px;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+.render-row:hover .delete-btn { opacity: 1; }
+.render-row .delete-btn:hover { color: var(--danger); }
+
+.unassociated-header {
+    padding: 10px 10px 4px;
+    font-size: 0.72em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+}
+.explorer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+.explorer-header .count {
+    font-weight: 500;
+    color: var(--text-dim);
+    font-size: 0.9em;
+}
+
+/* Explorer backdrop for mobile */
+.explorer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 19;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.explorer-backdrop.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* ============================================================
+   TREE LIST (in explorer)
+   ============================================================ */
+
+.file-list {
+    overflow-y: auto;
+    padding: 4px 8px;
+}
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background var(--transition);
+    gap: 6px;
+    border-left: 2px solid transparent;
+}
+.file-item:hover {
+    background: var(--bg-input);
+}
+.file-item.active {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+.file-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+}
+.file-item-icon {
+    margin-right: 6px;
+    font-size: 0.95em;
+    flex-shrink: 0;
+}
+.file-item .delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 0 2px;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+    flex-shrink: 0;
+}
+.file-item:hover .delete-btn {
+    opacity: 1;
+}
+.file-item .delete-btn:hover {
+    color: var(--danger);
+}
+
+/* ============================================================
+   RENDER LIST (in explorer)
+   ============================================================ */
+
+.render-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.render-item {
+    position: relative;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    overflow: hidden;
+    background: var(--bg-input);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.render-item:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-subtle);
+}
+.render-item.active {
+    border-color: var(--accent);
+}
+.render-item img {
+    width: 100%;
+    display: block;
+    background: #fff;
+    aspect-ratio: 4/3;
+    object-fit: contain;
+}
+.render-item-info {
+    padding: 5px 8px;
+    font-size: 0.72em;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.render-item-info .delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: color var(--transition), background var(--transition);
+}
+.render-item-info .delete-btn:hover {
+    color: var(--danger);
+    background: rgba(255, 123, 114, 0.1);
+}
+.render-empty {
+    color: var(--text-dim);
+    font-size: 0.82em;
+    text-align: center;
+    padding: 24px 12px;
+    line-height: 1.6;
+}
+
+/* ============================================================
+   TERMINAL PANEL
+   ============================================================ */
+
+.terminal-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    height: 38px;
+    min-height: 38px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 0.85em;
+}
+.terminal-header span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.terminal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Toggle switch */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 0.75em;
+    color: var(--text-secondary);
+    user-select: none;
+}
+.toggle-label input { display: none; }
+.toggle-switch {
+    width: 28px;
+    height: 16px;
+    background: var(--border);
+    border-radius: 8px;
+    position: relative;
+    transition: background var(--transition);
+}
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    transition: transform var(--transition), background var(--transition);
+}
+.toggle-label input:checked + .toggle-switch {
+    background: var(--warn);
+}
+.toggle-label input:checked + .toggle-switch::after {
+    transform: translateX(12px);
+    background: #111;
+}
+.toggle-label input:checked ~ .toggle-text {
+    color: var(--warn);
+}
+.terminal-status {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+}
+.terminal-status.connected {
+    background: var(--success);
+    box-shadow: 0 0 4px var(--success);
+}
+.terminal-status.disconnected {
+    background: var(--danger);
+}
+
+#terminal-container {
+    flex: 1;
+    background: #0d1117;
+    padding: 4px;
+    min-height: 0;
+}
+#terminal-container .xterm {
+    height: 100%;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+    animation: modalFadeIn 0.15s ease;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.modal-content {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.15s ease;
+}
+@keyframes modalSlideIn {
+    from { transform: translateY(-8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.modal-content h3 {
+    margin-bottom: 14px;
+    font-size: 1.05em;
+    font-weight: 700;
+}
+.modal-content textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color var(--transition);
+    line-height: 1.5;
+}
+.modal-content textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.modal-content textarea::placeholder {
+    color: var(--text-dim);
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+/* ============================================================
+   TREE SVG STYLES
+   ============================================================ */
+
+.link {
+    fill: none;
+    stroke: var(--text-dim);
+    stroke-width: 1.5;
+}
+.node circle {
+    fill: var(--accent);
+    stroke: var(--bg);
+    stroke-width: 2;
+}
+.node text {
+    font-size: 12px;
+    fill: var(--text);
+}
+.node--internal text {
+    font-size: 10px;
+    fill: var(--text-secondary);
+}
+
+/* ============================================================
+   LOADING STATES
+   ============================================================ */
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+.btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-left: 6px;
+}
+
+/* ============================================================
+   TOAST / NOTIFICATIONS
+   ============================================================ */
+
+.toast-container {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+}
+.toast {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 0.82em;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    animation: toastIn 0.2s ease;
+    max-width: 320px;
+}
+.toast-success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+.toast-error { background: #4a1a1a; color: var(--danger); border: 1px solid var(--danger); }
+.toast-info { background: var(--bg-input); color: var(--accent); border: 1px solid var(--accent); }
+@keyframes toastIn {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-light);
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUT HINTS
+   ============================================================ */
+
+.kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 0.75em;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    line-height: 1.4;
+}
+
+/* ============================================================
+   RESPONSIVE: tablets and small screens
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .panel-right {
+        flex: 0 0 320px;
+        min-width: 280px;
+    }
+    .toolbar-right .btn span.btn-label {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+    .panel-tree {
+        flex: 1;
+        min-width: unset;
+    }
+    .panel-right {
+        flex: 0 0 45%;
+        min-width: unset;
+        max-width: unset;
+        border-left: none;
+        border-top: 1px solid var(--border);
+    }
+    .panel-divider {
+        flex: 0 0 5px;
+        cursor: row-resize;
+        width: 100%;
+    }
+    .panel-divider::after {
+        width: 32px;
+        height: 3px;
+    }
+    .tagline {
+        display: none;
+    }
+    .welcome h2 { font-size: 1.3em; }
+    .welcome-steps { gap: 10px; }
+    .step { padding: 8px 10px; }
+    .example-chips { gap: 4px; }
+    .chip { font-size: 0.72em; padding: 4px 10px; }
+}
+
+@media (max-width: 480px) {
+    header { padding: 0 12px; }
+    .toolbar { padding: 4px 8px; gap: 4px; }
+    .toolbar .divider { display: none; }
+}

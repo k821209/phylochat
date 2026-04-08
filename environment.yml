@@ -1,0 +1,28 @@
+name: phylochat
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Python
+  - python=3.11
+  - pip
+  # R + ggtree
+  - nodejs
+  - r-base=4.3
+  - r-ggplot2
+  - bioconductor-ggtree
+  - bioconductor-ggtreeextra
+  - bioconductor-treeio
+  - r-svglite
+  # Python packages
+  - pip:
+      - fastapi
+      - uvicorn[standard]
+      - jinja2
+      - python-multipart
+      - aiosqlite
+      - aiofiles
+      - biopython
+      - pydantic-settings
+      - sse-starlette

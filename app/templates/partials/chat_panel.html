@@ -1,0 +1,18 @@
+<div class="terminal-panel">
+    <div class="terminal-header">
+        <span>
+            <span class="terminal-status" id="terminal-status" title="Disconnected"></span>
+            Terminal
+        </span>
+        <div class="terminal-actions">
+            <label class="toggle-label" title="Skip all permission prompts (auto-accept)">
+                <input type="checkbox" id="toggle-skip-permissions">
+                <span class="toggle-switch"></span>
+                <span class="toggle-text">Auto</span>
+            </label>
+            <button class="btn btn-sm" onclick="launchClaude('continue')" id="btn-continue-claude" title="Resume previous session">Continue</button>
+            <button class="btn btn-sm btn-primary" onclick="launchClaude('new')" id="btn-new-claude" title="Start a new session">New Session</button>
+        </div>
+    </div>
+    <div id="terminal-container"></div>
+</div>

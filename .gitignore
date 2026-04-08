@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/phylochat.db
+data/uploads/
+data/renders/
+data/exports/
+.DS_Store
+*.egg-info/

@@ -1,0 +1,45 @@
+<div id="tree-viewer" class="tree-viewer">
+    <div id="tree-placeholder" class="placeholder">
+        <div class="welcome">
+            <div class="welcome-icon">&#x1F333;</div>
+            <h2>PhyloChat</h2>
+            <p class="welcome-tagline">Tell your tree what to look like</p>
+
+            <div class="welcome-steps">
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <div>
+                        <strong>Upload a tree</strong>
+                        <p>Newick, Nexus, or PhyloXML format</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <div>
+                        <strong>Talk to Claude</strong>
+                        <p>Use the terminal to style your tree in natural language</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <div>
+                        <strong>Export</strong>
+                        <p>Publication-quality SVG/PNG with reproducible R code</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="welcome-examples">
+                <p class="examples-title">Try saying</p>
+                <div class="example-chips">
+                    <span class="chip" onclick="sendExamplePrompt(this)">Show bootstrap values above 70</span>
+                    <span class="chip" onclick="sendExamplePrompt(this)">Color clade A in blue</span>
+                    <span class="chip" onclick="sendExamplePrompt(this)">Switch to circular layout</span>
+                    <span class="chip" onclick="sendExamplePrompt(this)">Add a heatmap from my CSV</span>
+                    <span class="chip" onclick="sendExamplePrompt(this)">Style it for Nature</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <svg id="tree-svg"></svg>
+</div>

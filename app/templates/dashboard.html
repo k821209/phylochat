@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Left: Tree Viewer -->
+    <div class="panel panel-tree" id="panel-tree">
+        {% include "partials/toolbar.html" %}
+        <div class="view-tabs">
+            <button class="view-tab active" id="tab-preview" onclick="toggleView('d3')">Preview</button>
+            <button class="view-tab" id="tab-render" onclick="toggleView('render')">Render <span class="tab-count" id="render-count" style="display:none;">0</span></button>
+        </div>
+        {% include "partials/tree_viewer.html" %}
+        <div id="ggtree-render" class="ggtree-render" style="display:none;">
+            <div id="render-placeholder" class="placeholder">
+                <div class="welcome">
+                    <div class="welcome-icon" style="font-size:2em;">&#x1F3A8;</div>
+                    <h2>No render yet</h2>
+                    <p class="welcome-tagline">Upload a tree and ask Claude to generate a figure</p>
+                </div>
+            </div>
+            <img id="ggtree-image" src="" alt="ggtree render" style="display:none;">
+        </div>
+
+        <!-- File Explorer: slide-out drawer within tree panel -->
+        <div class="explorer-backdrop" id="explorer-backdrop" onclick="toggleExplorer(false)"></div>
+        <div class="panel-explorer" id="panel-explorer">
+            <button class="explorer-close-btn" onclick="toggleExplorer(false)" title="Close file explorer">&times;</button>
+            <div class="explorer-header">
+                <span>Files</span>
+            </div>
+            <div id="explorer-content" class="explorer-content"></div>
+        </div>
+    </div>
+
+    <!-- Resizable divider -->
+    <div class="panel-divider" id="panel-divider"></div>
+
+    <!-- Right: Terminal (Claude Code) -->
+    <div class="panel panel-right" id="panel-right">
+        {% include "partials/chat_panel.html" %}
+    </div>
+</div>
+
+<!-- Toast notification container -->
+<div class="toast-container" id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/tree-viewer.js"></script>
+<script src="/static/js/terminal.js"></script>
+<script src="/static/js/app.js"></script>
+{% endblock %}
