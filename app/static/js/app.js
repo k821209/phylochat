@@ -77,41 +77,27 @@ async function uploadTree(formData) {
 }
 
 /* ==========================================================
-   RENDER POLLING
+   RENDER EVENTS (SSE)
    ========================================================== */
 
 function startRenderPolling() {
-    // Sync initial state without showing anything
-    fetch('/render/latest').then(r => r.json()).then(data => {
-        lastRenderMtime = data.mtime || 0;
-    });
     refreshExplorer();
 
-    // Lightweight poll: only check /render/latest (single small response)
-    renderPollInterval = setInterval(async () => {
+    // SSE: server pushes new render events
+    const evtSource = new EventSource('/render/events');
+    evtSource.addEventListener('new_render', (e) => {
         try {
-            const resp = await fetch('/render/latest');
-            const data = await resp.json();
-
-            if (data.file && data.mtime > lastRenderMtime) {
-                lastRenderMtime = data.mtime;
-
-                // Associate — uses active tree or auto-detects from filename
-                const activeTreeId = TreeViewer.getTreeId();
-                const params = new URLSearchParams({ filename: data.file });
-                if (activeTreeId) params.set('tree_id', activeTreeId);
-                fetch(`/render/associate?${params}`, { method: 'POST' });
-
-                // Always show the latest render
-                showGgtreeRender(data.url);
-
-                updateRenderCount(null);
-                refreshExplorer();
-            }
-        } catch (e) {
+            const data = JSON.parse(e.data);
+            showGgtreeRender(data.url);
+            updateRenderCount(null);
+            refreshExplorer();
+        } catch (err) {
             // ignore
         }
-    }, 3000);
+    });
+    evtSource.onerror = () => {
+        // EventSource auto-reconnects; no action needed
+    };
 }
 
 function showGgtreeRender(url) {

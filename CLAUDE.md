@@ -34,12 +34,13 @@ Server runs at http://localhost:8000
 
 ## Rendering Rules
 
-When generating and executing R scripts for tree rendering:
+**Always use MCP tools for tree rendering. Do NOT run Rscript directly.**
 
-1. **Rscript path**: Always use `/Users/yangjaekang/miniconda3/envs/phylochat/bin/Rscript`
-2. **Save R script alongside image**: When saving a rendered PNG to `data/renders/`, also save the R script with the same basename and `.R` extension in the same directory. Example: `tree_15_colored_20260408.png` → `tree_15_colored_20260408.R`
-3. **Output directory**: All renders go to `data/renders/`
-4. **Style guide**: Follow `docs/tree_style_guide.md` for ggtree defaults
+- `render_ggtree(tree_id, r_code)` — executes R code, saves to DB, image auto-appears in web UI
+- `list_trees()` — see available trees
+- `get_tree_info(tree_id)` — tip count, labels, structure
+- `list_renders(tree_id)` — previous render history with R code
+- Read `phylochat://style-guide` resource for ggtree styling defaults
 
 ## Conventions
 

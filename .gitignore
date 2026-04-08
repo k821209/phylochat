@@ -5,4 +5,5 @@ data/uploads/
 data/renders/
 data/exports/
 .DS_Store
+.mcp.json
 *.egg-info/

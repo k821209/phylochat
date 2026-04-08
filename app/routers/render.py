@@ -1,8 +1,11 @@
+import asyncio
+import json
 import os
 import re
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse
+from sse_starlette.sse import EventSourceResponse
 
 from app.config import settings
 from app.database import get_db
@@ -271,3 +274,46 @@ async def serve_render(filename: str):
         raise ValueError(f"Render {filename} not found")
     media = "image/svg+xml" if filename.endswith(".svg") else "image/png"
     return FileResponse(file_path, media_type=media)
+
+
+@router.get("/events")
+async def render_events(request: Request):
+    """SSE endpoint — push new render events to the frontend."""
+    async def event_generator():
+        db = await get_db()
+        try:
+            row = await db.execute_fetchall(
+                "SELECT MAX(id) FROM render_history"
+            )
+            last_id = row[0][0] or 0
+        finally:
+            await db.close()
+
+        while True:
+            if await request.is_disconnected():
+                break
+            await asyncio.sleep(1)
+
+            db = await get_db()
+            try:
+                rows = await db.execute_fetchall(
+                    "SELECT id, tree_id, render_path, created_at FROM render_history "
+                    "WHERE id > ? ORDER BY id",
+                    (last_id,),
+                )
+                for r in rows:
+                    last_id = r[0]
+                    yield {
+                        "event": "new_render",
+                        "data": json.dumps({
+                            "render_id": r[0],
+                            "tree_id": r[1],
+                            "filename": r[2],
+                            "url": f"/renders/{r[2]}",
+                            "created_at": r[3],
+                        }),
+                    }
+            finally:
+                await db.close()
+
+    return EventSourceResponse(event_generator())

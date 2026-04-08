@@ -8,7 +8,14 @@ from pathlib import Path
 from app.config import settings
 
 
-def render_ggtree(newick: str, r_code: str, output_format: str = "png") -> Path:
+def render_ggtree(
+    newick: str,
+    r_code: str,
+    output_format: str = "png",
+    width: float = 10,
+    height: float = 8,
+    dpi: int = 300,
+) -> Path:
     """Run ggtree R code and return path to rendered image."""
     render_id = uuid.uuid4().hex[:12]
     ext = "svg" if output_format == "svg" else "png"
@@ -22,7 +29,7 @@ def render_ggtree(newick: str, r_code: str, output_format: str = "png") -> Path:
     newick_file.close()
 
     # Build full R script
-    full_script = _build_r_script(newick_file.name, str(output_path), r_code, output_format)
+    full_script = _build_r_script(newick_file.name, str(output_path), r_code, output_format, width, height, dpi)
 
     script_file = tempfile.NamedTemporaryFile(
         mode="w", suffix=".R", delete=False, dir=settings.RENDER_DIR
@@ -49,10 +56,13 @@ def render_ggtree(newick: str, r_code: str, output_format: str = "png") -> Path:
         raise RuntimeError("R execution timed out (60s)")
 
 
-def _build_r_script(newick_path: str, output_path: str, user_code: str, fmt: str) -> str:
+def _build_r_script(
+    newick_path: str, output_path: str, user_code: str, fmt: str,
+    width: float = 10, height: float = 8, dpi: int = 300,
+) -> str:
     """Build a complete R script wrapping user's ggtree code."""
     device = "svg" if fmt == "svg" else "png"
-    dpi_line = "" if fmt == "svg" else ", dpi = 300"
+    dpi_line = "" if fmt == "svg" else f", dpi = {dpi}"
 
     return f"""
 suppressPackageStartupMessages({{
@@ -72,7 +82,7 @@ if (!exists("p")) {{
   p <- ggtree(tree) + geom_tiplab()
 }}
 
-ggsave("{output_path}", plot = p, device = "{device}"{dpi_line}, width = 10, height = 8)
+ggsave("{output_path}", plot = p, device = "{device}"{dpi_line}, width = {width}, height = {height})
 """
 
 

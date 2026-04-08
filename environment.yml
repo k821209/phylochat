@@ -26,3 +26,4 @@ dependencies:
       - biopython
       - pydantic-settings
       - sse-starlette
+      - mcp>=1.0.0

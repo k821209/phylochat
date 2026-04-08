@@ -86,7 +86,28 @@ if (length(missing) > 0) {
 mkdir -p data/{uploads,renders,exports}
 echo "[OK] Data directories ready."
 
-# ── 6. Done ─────────────────────────────────────────
+# ── 6. Generate .mcp.json for Claude Code ───────────
+PROJECT_DIR=$(pwd)
+PYTHON_PATH="${CONDA_BASE}/envs/${ENV_NAME}/bin/python"
+CONDA_BIN="${CONDA_BASE}/envs/${ENV_NAME}/bin"
+
+cat > .mcp.json << MCPEOF
+{
+  "mcpServers": {
+    "phylochat": {
+      "command": "${PYTHON_PATH}",
+      "args": ["-m", "app.mcp.server"],
+      "cwd": "${PROJECT_DIR}",
+      "env": {
+        "PATH": "${CONDA_BIN}:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
+MCPEOF
+echo "[OK] .mcp.json generated."
+
+# ── 7. Done ─────────────────────────────────────────
 echo ""
 echo "==================================="
 echo "  Setup complete!"
