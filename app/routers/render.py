@@ -114,11 +114,22 @@ async def associate_render(filename: str, tree_id: int | None = None):
         if not tree_row:
             return {"associated": False, "reason": f"Tree {tree_id} not found"}
 
-        # Try to read R code from companion .R file
+        # Try to read R code from companion .R file (exact match or closest recent .R)
         r_code = ""
         r_file = file_path.with_suffix(".R")
         if r_file.exists():
             r_code = r_file.read_text(encoding="utf-8")
+        else:
+            # Find the most recent .R file with the same tree prefix
+            prefix = f"tree_{tree_id}_"
+            r_files = sorted(
+                [f for f in settings.RENDER_DIR.iterdir()
+                 if f.suffix == ".R" and f.name.startswith(prefix)],
+                key=lambda f: f.stat().st_mtime,
+                reverse=True,
+            )
+            if r_files:
+                r_code = r_files[0].read_text(encoding="utf-8")
 
         # Check if already associated
         existing = await db.execute_fetchall(
@@ -211,9 +222,28 @@ async def get_render_code(filename: str):
         row = await db.execute_fetchall(
             "SELECT r_code FROM render_history WHERE render_path = ?", (filename,)
         )
-        if not row or not row[0][0]:
-            return {"r_code": None}
-        return {"r_code": row[0][0], "filename": filename}
+        if row and row[0][0]:
+            return {"r_code": row[0][0], "filename": filename}
+
+        # Fallback: read companion .R file or most recent .R with same tree prefix
+        file_path = settings.RENDER_DIR / filename
+        r_file = file_path.with_suffix(".R")
+        if r_file.exists():
+            return {"r_code": r_file.read_text(encoding="utf-8"), "filename": filename}
+
+        tree_id = _extract_tree_id_from_filename(filename)
+        if tree_id:
+            prefix = f"tree_{tree_id}_"
+            r_files = sorted(
+                [f for f in settings.RENDER_DIR.iterdir()
+                 if f.suffix == ".R" and f.name.startswith(prefix)],
+                key=lambda f: f.stat().st_mtime,
+                reverse=True,
+            )
+            if r_files:
+                return {"r_code": r_files[0].read_text(encoding="utf-8"), "filename": filename}
+
+        return {"r_code": None}
     finally:
         await db.close()
 
